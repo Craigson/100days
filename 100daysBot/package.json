@@ -1,0 +1,14 @@
+{
+  "name": "100days_bot",
+  "version": "1.0.0",
+  "description": "A bot that reposts everyone's work from the 100 Days of Making Class",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Craig Pickard",
+  "license": "MIT",
+  "dependencies": {
+    "tumblr.js": "0.0.7"
+  }
+}
