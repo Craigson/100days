@@ -24,7 +24,9 @@ var config = require('./config'); //SEPARATE CONFIG FILE FOR STORING KEYS ETC
 var client = tumblr.createClient( config );
 
 //KEEP TRACK OF WHAT DAY IT IS FOR THE CHALLENGE (BOT WRITTEN ON DAY 15)
-var dayCounter = 15;
+var dayCounter = 19;
+
+var ESTdate = '2016-02-16';
 
 //CREATE A BOOLEAN TO ENSURE CODE ONLY RUNS ONCE A DAY
 var waiting = true;
@@ -36,13 +38,29 @@ function checkTime()
 	console.log("checking time");
 	var currentTime = new Date();
 	console.log("checked at: " + currentTime);
-	if (currentTime.getHours() === 6 && currentTime.getMinutes() === 58 && waiting == true)
+	if (currentTime.getHours() === 4 && currentTime.getMinutes() === 59 && waiting == true)
 	{
 		setTimeout(reblogPosts, 1000 * 60);
 		console.log("Waiting 1 minute before reblogging!");
 		waiting = false;
-	} else {
-		//console.log("waiting");
+	} else if (currentTime.getHours() === 12 && currentTime.getMinutes() === 0 && waiting == true)
+	{
+				//CHECK TODAY'S DATE
+		var dateData = new Date(); 
+		var year, month, day;
+		year = dateData.getFullYear();
+
+		//FORMAT THE DATE CORRECTLY FOR COMPARISION
+		if (dateData.getMonth() < 9) month = '0' + (dateData.getMonth()+1).toString();
+		else month = (dateData.getMonth()+1);
+		if (dateData.getDate() < 9 ) day = '0' + (dateData.getDate()).toString();
+		else day = dateData.getDate();
+
+		var todayDate = year + '-' + month + '-' + day;
+
+		ESTdate = todayDate;
+
+		console.log("Saving EST date!");
 	}
 
 }
@@ -53,7 +71,7 @@ function reblogPosts()
 	console.log("Reblogging class posts");
 
 	// Make the request
-	client.tagged('100daysofmaking', function (err, data) {
+	client.tagged(encodeURIComponent('100daysITP'), function (err, data) {
 
 		if (err)
 		{
@@ -77,21 +95,34 @@ function reblogPosts()
 			//console.log(data.length);
 
 		 	// //UNCOMMENT TO SAVE THE JSON RESPONSE FILE
-		 	// var json = JSON.stringify(data,null,2);
-			//fs.writeFile("tagsData.json", json, function(){console.log("writing json response")});
+		 // 	var json = JSON.stringify(data,null,2);
+			// fs.writeFile("tagsData.json", json, function(){console.log("writing json response")});
 		
-			for (var i = 0; i < 5; i++)
-			{
-				//RETRIEVE TODAY'S DATE
-				var dateToCheck = (data[i].date).toString();
 
-				//SPLIT THE STRING TO GET DATE INTO THE FORMAT YYYY-MM-DD
+
+			
+			for (var i = 0; i < 20; i++)
+			{
+
+								// // //RETRIEVE TODAY'S DATE
+			    var dateToCheck = (data[i].date).toString();
+
+			    console.log("user date: " + dateToCheck);
+
+				// // //SPLIT THE STRING TO GET DATE INTO THE FORMAT YYYY-MM-DD
 				var splitDate = dateToCheck.split(" ");
+
+				var postDate = splitDate[0];
+				// 
+				console.log("est: " + ESTdate);
+				console.log("post date: " + splitDate[0]);
 
 				//THE DATE YYYY-MM-DD IS THE FIRST OBJECT IN THE ARRAY, CHECK THIS AGAINST THE DATE
 				//FOUND IN THE RESPONSE.  IF THEY ARE THE SAME, THE POST IS FROM THE CURRENT DAY, SO
 				//REPOST IT TO THE CLASS BLOG
-				if(todayDate === splitDate[0]) 
+				// if(ESTdate === todayDate) 
+				//if(ESTdate === splitDate)
+				if(ESTdate === postDate)
 				{
 					var name = data[i].blog_name;
 
@@ -100,14 +131,14 @@ function reblogPosts()
 					console.log("id: " + data[i].id);
 					console.log("name: " + name);
 					console.log("reblog_key: " + data[i].reblog_key);
-					console.log("date: " + splitDate[0]);
+					console.log("date: " + postDate);
 					console.log("-----");
 
 					//CREATE OBJECT WITH ALL THE POSTS INFORMATION
 					var postData = {
 						id: data[i].id,
 						reblog_key: data[i].reblog_key,
-						comment: "Day " + dayCounter + " - Post by " + name + " on " + splitDate[0]
+						comment: "Day " + dayCounter + " - Post by " + name + " on " + postDate
 					}
 
 					//SUBMIT POST REQUEST
@@ -129,5 +160,10 @@ function reblogPosts()
 	});
 	console.log("waiting 24 hours before next post");
 	waiting = true;
+	setTimeout(updateCounter, 1000*30);
+}
+
+function updateCounter()
+{
 	dayCounter++;
 }
